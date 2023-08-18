@@ -21,8 +21,14 @@ class Apt(dotbot.Plugin):
     def _run(self, command: Sequence[Any], low_info: str) -> bool:
         self._log.lowinfo(low_info)
         try:
-            check_call(command, stdout=DEVNULL, stderr=DEVNULL)
+            try:
+                # Try running the command without sudo first
+                check_call(command, stdout=DEVNULL, stderr=DEVNULL)
+            except CalledProcessError as e:
+                sudo_command = ["sudo"] + command
+                check_call(sudo_command, stdout=DEVNULL, stderr=DEVNULL)
             return True
         except CalledProcessError as e:
             self._log.error(e)
             return False
+
